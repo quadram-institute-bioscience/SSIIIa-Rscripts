@@ -1,0 +1,245 @@
+---
+title: "Brittany's wheat paper report"
+author: "George Savva"
+date: "14/04/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message=FALSE)
+```
+
+```{r source_analysis, cache=FALSE, echo=FALSE, include=FALSE}
+source("main4_final.R")
+```
+
+# Outcome reports
+
+```{r starch, results='asis', warning=FALSE, message=FALSE}
+
+library(sjPlot)
+library(ggplot2)
+library(patchwork)
+library(knitr)
+library(kableExtra)
+
+
+
+```
+
+# Tables of outcomes
+
+```{r maintable}
+library(knitr)
+library(kableExtra)
+
+## Outcomes with only two levels
+twoleveloutcomes <- names(which(sapply(outcomes, function(x) length(unique(allData$genotype[!is.na(allData[,x])]))==2)))
+
+## Outcomes with eight levels
+eightleveloutcomes <- names(which(sapply(outcomes, function(x) length(unique(allData$genotype[!is.na(allData[,x])]))==8)))
+
+table2 <- means_and_sds[rownames(means_and_sds) %in% twoleveloutcomes,c("Sib.Ctrl","ABD")]
+table8 <- means_and_sds[rownames(means_and_sds) %in% eightleveloutcomes,]
+
+rownames(table2) <- outlabs[rownames(table2)]
+rownames(table8) <- outlabs[rownames(table8)]
+
+countstable8 <- counts2[rownames(counts2) %in% eightleveloutcomes,]
+countstable2 <- counts2[rownames(counts2) %in% twoleveloutcomes,c("Sib.Ctrl","ABD")]
+
+rownames(countstable2) <- outlabs[rownames(countstable2)]
+rownames(countstable8) <- outlabs[rownames(countstable8)]
+
+kable(table2) %>%  kable_styling(bootstrap_options = "striped", full_width = F)
+kable(table8) %>%  kable_styling(bootstrap_options = "striped", full_width = F)
+
+kable_styling(kable(sugarstab,escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+
+
+kable(countstable2) %>%  kable_styling(bootstrap_options = "striped", full_width = F)
+kable(countstable8) %>%  kable_styling(bootstrap_options = "striped", full_width = F)
+
+```
+
+# Main table of outcomes
+
+```{r }
+finaltableoutcomes <- c( "TGW.g.", "Protein.Dry.basis....NIR", "starch","starchPerGrain", "amylose", "RS", "RSgPer100")
+
+names <- c(" "=1,"TGW"=1, "Protein"=1, "Starch"=2, 
+                        "Amylose"=1, "Resistant starch"=2)
+names2 <- c("(g)", "(%)", "(g/100g flour)", "(mg/grain)", 
+                        "(%)", "(g/100g flour)", 
+                        "(g/100g starch)")
+
+table8Br <- t(means_and_sds[finaltableoutcomes,])
+
+colnames(table8Br) <- names2
+                        
+rownames(table8Br) <- paste0(text_spec("ssIIIa-", italic = TRUE), rownames(table8Br))
+rownames(table8Br)[1] <- "Sibling control" 
+
+kable(table8Br, escape = FALSE, align=rep("c",7)) %>% 
+  kable_styling(bootstrap_options = "striped", full_width = F,) %>% 
+  add_header_above(names)
+
+```
+
+
+```{r }
+
+star <- function(p) ifelse(p<0.05,"*","")
+
+round2 <- function(x) ifelse(x<0.001, "<0.001", round(x,3))
+
+outcol <- function(model) {
+  tab1 <- tidy(model)[1:8,c("term", "estimate", "std.error", "p.value")]
+  #within(tab1, out <- paste0(signif((estimate),2), " (",signif(std.error,2),") ", star(p.value)))
+  v <- with(tab1,paste0(signif((estimate),2), " (",signif(std.error,2),") ", round2(p.value)))
+  names(v) <- tab1$term
+  v
+}
+
+rownamesvec <- paste0(text_spec("ssIIIa-", italic = TRUE), 
+                      rownames(t(means_and_sds[finaltableoutcomes,])), " vs control")
+rownamesvec[1] <- "Sibling control" 
+rownamesvec2 <- c("Sibling control","A","B","D","AB interaction", "AD interaction", "BD interaction", "ABD interaction")
+
+tabbedmodels <- lapply(modelsFULL, outcol)
+names(tabbedmodels) <- names(modelsFULL)
+tabsFULL <- lapply(outcomeslist,function(outcomes){
+  tab <- do.call(cbind, tabbedmodels[outcomes])
+  if(tab[4,1]!="NA (NA) NA") rownames(tab) <- rownamesvec 
+  else rownames(tab)[1:2] <- rownamesvec[c(1,8)]
+  colnames(tab) <- outlabs[colnames(tab)]
+  tab
+  })
+
+tabbedmodelsMUTATION <- lapply(modelsMUTATION, outcol)
+names(tabbedmodelsMUTATION) <- names(modelsMUTATION)
+tabsMUT <- lapply(outcomeslist,function(outcomes){
+  tab <- do.call(cbind, tabbedmodelsMUTATION[outcomes])
+  if(tab[4,1]!="NA (NA) NA") rownames(tab) <- rownamesvec2 
+  else rownames(tab)[1:2] <- rownamesvec[c(1,8)]
+  colnames(tab) <- outlabs[colnames(tab)]
+  tab
+  })
+
+tabbedmodelsLM <- lapply(modelsLM, outcol)
+names(tabbedmodelsLM) <- names(modelsLM)
+tabsLM <- lapply(outcomeslist,function(outcomes){
+  tab <- do.call(cbind, tabbedmodelsLM[outcomes])
+  if(tab[4,1]!="NA (NA) NA") rownames(tab) <- rownamesvec 
+  else rownames(tab)[1:2] <- rownamesvec[c(1,8)]
+  colnames(tab) <- outlabs[colnames(tab)]
+  tab
+  })
+
+```
+
+# Individual Tabulations and graphs
+
+## Starch
+
+
+```{r tabs1}
+rownamesX <- paste0(text_spec("ssIIIa-", italic = TRUE), c("I","A","B","D","AB","AD","BD","ABD"), " vs control")
+rownamesX[1] <- "Sibling control" 
+
+
+kable_styling(kable(tabsFULL[[1]] ,escape = FALSE),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs3[outcomeslist[[1]]])
+```
+
+## Grain characteristics
+
+
+```{r }
+
+kable_styling(kable(tabsFULL[[3]],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs3[outcomeslist[[3]]])
+```
+
+## Particle size
+
+```{r }
+
+kable_styling(kable(tabsFULL[[4]] ,escape = FALSE),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs3[outcomeslist[[4]]])
+```
+
+## Protein etc
+
+```{r }
+
+kable_styling(kable(tabsFULL[[7]] ,escape = FALSE),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs3[outcomeslist[[7]]])
+```
+
+
+## Physicochemical properties
+
+```{r }
+kable_styling(kable(tabsLM[[2]][1:2,],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs2b[outcomeslist[[2]]])
+```
+
+## Chain length distribution
+
+```{r }
+
+kable_styling(kable(tabsLM[[5]][1:2,],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs2b[outcomeslist[[5]]])
+```
+
+## Germination index and hardness
+
+```{r }
+
+kable_styling(kable(tabsLM[[6]][1:2,],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+wrap_plots(graphs3[outcomeslist[[6]]])
+
+```
+
+## Sugars
+
+```{r }
+
+g_sugars_bar
+
+tab_model(lm_sucrose_NOLOG, lm_glucose_NOLOG, lm_fructose_NOLOG, dv.labels = c("Sucrose", "Glucose", "Fructose"))
+
+```
+
+# Models with interactions
+
+## Starch
+
+```{r }
+kable_styling(kable(tabsMUT[[1]],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+```
+
+## Grain characteristics
+
+```{r }
+kable_styling(kable(tabsMUT[[3]],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+```
+
+## Particle sizes
+
+```{r }
+kable_styling(kable(tabsMUT[[4]],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+```
+
+## Protein
+
+```{r }
+kable_styling(kable(tabsMUT[[7]],escape = FALSE ),bootstrap_options = "striped", full_width = F,)
+```
+
+## Sugars
+
+```{r }
+tab_model(lm_sucrose_MUT_NOLOG, lm_glucose_MUT_NOLOG, lm_fructose_MUT_NOLOG, dv.labels = c("Sucrose", "Glucose", "Fructose"))
+```
