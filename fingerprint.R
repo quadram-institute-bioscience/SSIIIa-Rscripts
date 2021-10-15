@@ -38,6 +38,12 @@ lmbg1 <- lm(data=fingerprint , sumBG ~ A*B*D )
 lmax_2nd_order <- lm(data=fingerprint , sumAX ~ (A+B+D)^2 )
 lmbg_2nd_order <- lm(data=fingerprint , sumBG ~ (A+B+D)^2 )
 
+lmax_1st_order <- lm(data=fingerprint , sumAX ~ (A+B+D) )
+lmbg_1st_order <- lm(data=fingerprint , sumBG ~ (A+B+D) )
+
+lmax_null <- lm(data=fingerprint , sumAX ~ 1 )
+lmbg_null <- lm(data=fingerprint , sumBG ~ 1 )
+
 lmax2 <- lm(data=fingerprint , sumAX ~ genotype )
 lmbg2 <- lm(data=fingerprint , sumBG ~ genotype )
 
@@ -55,8 +61,28 @@ summary(lmbg2)
 anova(lmax1)
 anova(lmbg1)
 
+summary(lmax_1st_order)
+summary(lmbg_1st_order)
 
-## For BG the 'significant' effects are the A, B and D main effects, the A/B interactions and possibly the A/B/D interaction
-## For AX the 'significant' effects are the A, B and D main effects, the B/D interaction possibly the A/B and A/D interactions
+summary(lmax_2nd_order)
+summary(lmbg_2nd_order)
 
 
+## For both outcomes it is clear that each of the mutations is important.
+## B and D are consistently more important than A.
+
+lmax_muts <- lm(data=fingerprint , sumAX ~ factor(mutations) )
+lmbg_muts <- lm(data=fingerprint , sumBG ~ factor(mutations) )
+
+summary(lmax_muts)
+summary(lmbg_muts)
+
+emmeans(lmax_muts, consec ~ mutations , adjust="none")
+emmeans(lmbg_muts, consec ~ mutations , adjust="none")
+
+anova(lmax_null, lmax_1st_order, lmax_2nd_order, lmax1)
+anova(lmbg_null, lmbg_1st_order, lmbg_2nd_order, lmbg1)
+
+
+
+## There isn't much correlation between amylose and RS beyond this, when taken at the RS level.
