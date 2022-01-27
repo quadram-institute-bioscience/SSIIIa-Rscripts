@@ -34,9 +34,9 @@ dsc$ID <- dsc$`Plant/Line`
 dsc$`Plant/Line` <- NULL
 
 ### Create 'starches' table with this information
-amylose <- melt(read_excel(path="data.xlsx", sheet="Amylose (%)", range="A1:H6"))
-starch2 <- melt(read_excel(path="data.xlsx", sheet="Starch Content (% of flour)", range="A1:H6"))
-starchpergrain <- melt(read_excel(path="data.xlsx", sheet="Starch Content (mg per grain)", range="A1:H6"))
+amylose <- melt(read_excel(path="data/data.xlsx", sheet="Amylose (%)", range="A1:H6"))
+starch2 <- melt(read_excel(path="data/data.xlsx", sheet="Starch Content (% of flour)", range="A1:H6"))
+starchpergrain <- melt(read_excel(path="data/data.xlsx", sheet="Starch Content (mg per grain)", range="A1:H6"))
 RS <- melt(read_excel(path="data.xlsx", sheet="RS", range="A1:H6"))
 RSgPer100 <- melt(read_excel(path="data.xlsx", sheet="RS g per 100 g starch", range="A1:H6"))
 starches <- cbind(amylose, 
@@ -72,6 +72,9 @@ germination <-  tidyr::separate(remove_missing(read_excel("germination.xlsx",
                           range="A10:G59")[,c(1,7)]), 1,c("Cross","ID","Genotype"), " ")
 germination <- subset(germination, Cross=="2074x0905x0291")
 germination$Genotype<-NULL
+
+
+### FILES BELOW THIS POINT ARE NO LONGER USED, BUT SUPPORT A PREVIOUS VERSION OF THE PAPER.
 
 source("SEC.R")
 source("protein.R")

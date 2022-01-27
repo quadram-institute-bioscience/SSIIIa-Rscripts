@@ -4,6 +4,8 @@ library(tidyr)
 library(readxl)
 library(ggplot2)
 library(lmerTest)
+library(emmeans)
+library(data.table)
 
 marvin1 <- read_excel(path="data/marvin.xlsx",
            sheet=2,
@@ -23,8 +25,17 @@ marvin2 <- marvin1[`Total grain Weight (g)`>1]
 ## Remove the outlier?
 
 
+summary(lm(data=marvin2[Genotype=="wt"], `TGW(g)` ~ Cross))
+summary(lm(data=marvin2[Genotype=="wt"  & Cross!="1738x1731x1250"], `TGW(g)` ~ Cross))
+
+summary(lmer(data=marvin2[Genotype=="wt"], `TGW(g)` ~ (1|Gene) + (1|Cross)))
+ggplot(data=marvin2[Genotype=="wt"], aes(gsub("x","\n",Cross), y=`TGW(g)`)) + geom_point() + stat_summary()
+
+lmer_all_twg <- lmer(data= marvin2, `TGW(g)` ~ Genotype*Gene + (Genotype | Cross))
+summary(lmer_all_twg)
+
 results <- lapply(c("Main Seeds (total seed number)", 
-         "Total grain Weight (g)",
+         "Total grain Weight (g)", "TGW(g)",
          "Area", "Width", "Length"), function(v){
 
 g1 <- ggplot(data=marvin1, aes(gsub("x","\n",Cross), get(v) )) + 
